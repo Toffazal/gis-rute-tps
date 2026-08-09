@@ -14,6 +14,7 @@
     <link href="{{ asset('admin-assets/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-assets/css/dataTables.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-assets/css/select2.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-assets/css/select2.custom.css') }}" rel="stylesheet">
 
     <!-- Fontawesome -->
     <link href="{{ asset('admin-assets/plugins/fontawesome/css/all.min.css') }}" rel="stylesheet">
@@ -23,6 +24,8 @@
 
     {{-- CKEditor --}}
     <script src="{{ asset('admin-assets/plugins/ckeditor/ckeditor.js') }}"></script>
+
+    @yield('head')
 </head>
 
 <style type="text/css">
@@ -152,6 +155,13 @@
                                 href="{{ route('admin.jadwal.index') }}" aria-expanded="false">
                                 <i class="fas fa-calendar-alt me-3" aria-hidden="true"></i>
                                 <span class="hide-menu">Jadwal</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link waves-effect waves-dark sidebar-link"
+                                href="{{ route('admin.riwayat.index') }}" aria-expanded="false">
+                                <i class="fas fa-route me-3" aria-hidden="true"></i>
+                                <span class="hide-menu">Riwayat & Monitoring</span>
                             </a>
                         </li>
                         <li class="sidebar-item">

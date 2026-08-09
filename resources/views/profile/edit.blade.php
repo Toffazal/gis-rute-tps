@@ -1,5 +1,5 @@
 @php
-    $template = auth()->user()->role === 'user' ? 'user.template' : 'admin.template';
+    $template = auth()->user()->role === 'sopir' ? 'sopir.template' : 'admin.template';
 @endphp
 
 @extends($template)

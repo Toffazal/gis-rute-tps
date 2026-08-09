@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AngkutanController;
 use App\Http\Controllers\Admin\SopirController;
 use App\Http\Controllers\Admin\WebsiteController;
 use App\Http\Controllers\Admin\JadwalController;
+use App\Http\Controllers\Admin\RiwayatController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -18,4 +19,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/jadwal/template', [JadwalController::class, 'downloadTemplate'])->name('admin.jadwal.template');
     Route::post('/admin/jadwal/import', [JadwalController::class, 'import'])->name('admin.jadwal.import');
     Route::resource('/admin/jadwal', JadwalController::class)->names('admin.jadwal');
+
+    // Monitoring Rute Sopir
+    Route::get('/admin/riwayat', [RiwayatController::class, 'index'])->name('admin.riwayat.index');
+    Route::get('/admin/riwayat/{ruteHarian}', [RiwayatController::class, 'show'])->name('admin.riwayat.show');
 });

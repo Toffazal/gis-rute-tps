@@ -12,4 +12,9 @@ class Angkutan extends Model
         'nama',
         'nomor',
     ];
+
+    public function ruteHarian()
+    {
+        return $this->hasMany(RuteHarian::class, 'angkutan_id');
+    }
 }

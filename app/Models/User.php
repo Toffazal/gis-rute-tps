@@ -47,4 +47,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function ruteHarian()
+    {
+        return $this->hasMany(RuteHarian::class, 'user_id');
+    }
 }

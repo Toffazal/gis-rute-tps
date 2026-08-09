@@ -12,17 +12,21 @@
     <!-- Custom CSS -->
     <link href="{{ asset('admin-assets/css/style.min.css') }}" rel="stylesheet">
     <link href="{{ asset('admin-assets/css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-assets/css/dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-assets/css/select2.min.css') }}" rel="stylesheet">
 
     <!-- Fontawesome -->
-    <link href="{{ asset('fontawesome/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-assets/plugins/fontawesome/css/all.min.css') }}" rel="stylesheet">
 
     <!-- Date Range Picker -->
-    <link href="{{ asset('css/daterangepicker.css') }}" rel="stylesheet">
+    <link href="{{ asset('admin-assets/css/daterangepicker.css') }}" rel="stylesheet">
 
     {{-- CKEditor --}}
-    <script src="{{ asset('ckeditor/ckeditor.js') }}"></script>
+    <script src="{{ asset('admin-assets/plugins/ckeditor/ckeditor.js') }}"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <style type="text/css">
@@ -65,7 +69,7 @@
                         <!--End Logo icon -->
                         <!-- Logo text -->
                         <span class="logo-text">
-                            <h2 class="text-dark mt-4 bold" title="GIS Haversine">
+                            <h2 class="text-dark mt-4 bold" title="GIS Rute TPS">
                                 G I S</h2>
                         </span>
                     </a>
@@ -128,9 +132,16 @@
                         </li>
                         <li class="sidebar-item">
                             <a class="sidebar-link waves-effect waves-dark sidebar-link"
-                                href="{{ route('sopir.tps.index') }}" aria-expanded="false">
-                                <i class="fas fa-map-marker-alt me-3" aria-hidden="true"></i>
-                                <span class="hide-menu">TPS</span>
+                                href="{{ route('sopir.jadwal.index') }}" aria-expanded="false">
+                                <i class="fas fa-calendar-alt me-3" aria-hidden="true"></i>
+                                <span class="hide-menu">Jadwal</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link waves-effect waves-dark sidebar-link"
+                                href="{{ route('sopir.riwayat.index') }}" aria-expanded="false">
+                                <i class="fas fa-history me-3" aria-hidden="true"></i>
+                                <span class="hide-menu">Riwayat</span>
                             </a>
                         </li>
                         <li class="sidebar-item">
@@ -140,8 +151,7 @@
                                 <span class="hide-menu">Akun</span>
                             </a>
                         </li>
-                        <form id="logout-form" method="POST" action="{{ route('logout') }}"
-                            style="display: none;">
+                        <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
                             @csrf
                         </form>
                         <li class="sidebar-item bg-danger">
@@ -240,23 +250,19 @@
     <!-- ============================================================== -->
     <!-- End Wrapper -->
     <!-- ============================================================== -->
-    <!-- ============================================================== -->
-    <!-- All Jquery -->
-    <!-- ============================================================== -->
     <script src="{{ asset('admin-assets/plugins/bower_components/jquery/dist/jquery.min.js') }}"></script>
     <!-- Bootstrap tether Core JavaScript -->
     <script src="{{ asset('admin-assets/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('fontawesome/js/all.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/plugins/fontawesome/js/all.min.js') }}"></script>
     <!--Menu sidebar -->
     <script src="{{ asset('admin-assets/js/sidebarmenu.js') }}"></script>
     <!--Custom JavaScript -->
     <script src="{{ asset('admin-assets/js/custom.js') }}"></script>
-    <script src="{{ asset('js/dataTables.min.js') }}"></script>
-    <script src="{{ asset('js/dataTables.bootstrap5.min.js') }}"></script>
-    <script src="{{ asset('js/select2.min.js') }}"></script>
-    <script src="{{ asset('js/lazysize.min.js') }}"></script>
-    <script src="{{ asset('js/moment.min.js') }}"></script>
-    <script src="{{ asset('js/daterangepicker.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/dataTables.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/select2.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/moment.min.js') }}"></script>
+    <script src="{{ asset('admin-assets/js/daterangepicker.min.js') }}"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {

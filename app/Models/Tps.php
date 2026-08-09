@@ -20,4 +20,19 @@ class Tps extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function ruteTujuan()
+    {
+        return $this->hasMany(RuteTujuan::class, 'tps_id');
+    }
+
+    public function matriksAsal()
+    {
+        return $this->hasMany(MatriksJarak::class, 'asal_id');
+    }
+
+    public function matriksTujuan()
+    {
+        return $this->hasMany(MatriksJarak::class, 'tujuan_id');
+    }
 }
