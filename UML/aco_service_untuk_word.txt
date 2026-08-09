@@ -1,0 +1,118 @@
+PENJELASAN METODE ANT COLONY OPTIMIZATION (ACO) DAN FORMULA PENGHITUNGAN JARAK DAN WAKTU
+
+Dokumen ini berisi penjelasan teoritis dan teknis mengenai implementasi algoritma Ant Colony Optimization (ACO), penentuan jarak (Distance Matrix), serta pengelolaan waktu perjalanan di dalam aplikasi GIS Rute TPS. Dokumen ini dirancang dengan format teks bersih (tanpa simbol Markdown dan LaTeX) agar mudah disalin (copy-paste) secara langsung ke dalam Microsoft Word untuk kebutuhan skripsi Anda.
+
+=========================================
+1. KONSEP DASAR IMPLEMENTASI ACO PADA SISTEM
+=========================================
+Algoritma Ant Colony Optimization (ACO) diadaptasi dari perilaku koloni semut asli dalam mencari rute terpendek dari sarang menuju sumber makanan. Di dalam aplikasi pengangkutan sampah ini:
+- Sarang (Titik Awal) didefinisikan sebagai Kantor/Pool Truk Sampah (atau koordinat TPS terakhir jika dalam mode re-optimasi jalan).
+- Sumber Makanan (Titik Antara) dianalogikan sebagai daftar TPS (Tempat Pembuangan Sementara) yang harus dikunjungi.
+- Tujuan Akhir dianalogikan sebagai TPA (Tempat Pemprosesan Akhir) sebagai tempat pembuangan akhir sekaligus titik selesainya rute.
+- Jejak Pheromone adalah zat kimia yang ditinggalkan oleh semut di sepanjang jalur lintasan. Jalur yang lebih pendek akan dilewati semut dengan lebih cepat, mengumpulkan konsentrasi pheromone yang lebih tinggi, dan akhirnya menarik koloni semut berikutnya untuk memilih jalur tersebut.
+
+=========================================
+2. PARAMETER ALGORITMA ACO
+=========================================
+Penentuan performa dan kecepatan konvergensi algoritma ACO sangat dipengaruhi oleh parameter-parameter berikut:
+
+a. Alpha (Pengaruh Pheromone)
+- Fungsi: Mengatur tingkat intensitas pengaruh jejak semut terdahulu terhadap keputusan semut saat ini.
+- Nilai Sistem: 1.0
+- Dampak Akademis: Jika Alpha bernilai besar, semut akan sangat cenderung mengikuti jalur yang sudah sering dilewati sebelumnya (cepat konvergen ke solusi suboptimal/lokal optimum). Jika Alpha = 0, semut hanya akan memilih jalur berdasarkan jarak terdekat (komputasi serakah/greedy search).
+
+b. Beta (Pengaruh Jarak/Heuristik)
+- Fungsi: Mengatur tingkat pengaruh kedekatan fisik lokasi terhadap pilihan semut. Nilai heuristik didefinisikan sebagai visibilitas atau kedekatan (Eta = 1 / d, di mana d adalah jarak antara lokasi asal dan tujuan).
+- Nilai Sistem: 3.0
+- Dampak Akademis: Nilai Beta yang lebih tinggi (3.0) berarti semut sangat mengutamakan jarak yang dekat dalam memilih tujuan berikutnya. Hal ini mencegah semut memilih rute acak yang terlalu jauh di awal iterasi.
+
+c. Rho (Tingkat Evaporasi Pheromone)
+- Fungsi: Mengurangi akumulasi pheromone secara berkala agar jalur-jalur buruk yang sempat dilewati di iterasi awal tidak mendominasi keputusan semut di iterasi akhir. Nilai Rho harus berada di antara 0 dan 1 (0 <= Rho < 1).
+- Nilai Sistem: 0.5 (artinya 50% pheromone menguap di setiap akhir iterasi).
+- Rumus Evaporasi:
+  Pheromone Baru = (1 - Rho) * Pheromone Lama
+
+d. Q (Konstanta Deposit Pheromone)
+- Fungsi: Konstanta pembanding untuk menentukan seberapa banyak pheromone baru yang diletakkan semut setelah menyelesaikan satu putaran rute. Semut yang berhasil menyelesaikan rute dengan total panjang L akan menaruh pheromone baru sebesar Delta Pheromone pada jalur yang dilewatinya.
+- Nilai Sistem: 100.0
+- Rumus Kontribusi Pheromone:
+  Delta Pheromone = Q / L
+  (Di mana L merupakan akumulasi total jarak tempuh semut tersebut dalam meter).
+
+e. Jumlah Semut (Ant Count)
+- Fungsi: Jumlah agen pencari (semut) yang disimulasikan untuk menjelajahi grafik rute pada setiap iterasi tunggal.
+- Nilai Sistem: 20 semut
+- Dampak Akademis: Semakin banyak semut, semakin luas eksplorasi alternatif jalur yang dilakukan, sehingga memperbesar peluang menemukan rute terpendek global (global optimum). Namun, beban kerja memori server akan meningkat secara linear sebanding dengan jumlah semut.
+
+f. Jumlah Iterasi (Iterations)
+- Fungsi: Batas pengulangan siklus pencarian rute oleh seluruh koloni semut.
+- Nilai Sistem: 50 iterasi
+- Dampak Akademis: Pada setiap iterasi, 20 semut akan membangun rute dan memperbarui peta pheromone. Dengan 50 iterasi, total perjalanan semut yang disimulasikan adalah sebanyak 20 x 50 = 1000 kali perjalanan, menjamin kestabilan konvergensi menuju jalur terpendek.
+
+=========================================
+3. PENENTUAN JARAK ANTAR LOKASI (DISTANCE MATRIX)
+=========================================
+Sistem menerapkan dua lapis penentuan jarak untuk memastikan perhitungan rute tetap akurat dalam segala kondisi:
+
+Metode A: Query Tabel Database "matriks_jarak" (Prioritas Utama)
+Sebelum melakukan perhitungan, sistem memprioritaskan data jarak riil berdasarkan jalan raya (road network distance) yang telah disimpan pada tabel database "matriks_jarak". Data ini diperoleh dari pengukuran rute jalan sebenarnya (misalnya melalui Google Maps API atau OSRM).
+
+Metode B: Formula Haversine (Alternatif / Fallback)
+Jika data koordinat belum memiliki pencatatan jarak jalan raya di database, sistem menggunakan Formula Haversine untuk menghitung jarak lurus geografis (garis melengkung mengikuti permukaan bumi) antara dua titik koordinat lintang (latitude) dan bujur (longitude) secara langsung.
+
+Rumus Matematika Haversine:
+d = 2 * r * arcsin( akar( sin^2(selisih_lat / 2) + cos(lat_asal) * cos(lat_tujuan) * sin^2(selisih_lng / 2) ) )
+
+Keterangan Rumus:
+- d = Jarak antar dua titik lokasi (meter).
+- r = Jari-jari rata-rata bumi (6.371.000 meter).
+- lat_asal, lat_tujuan = Lintang lokasi asal dan tujuan (dikonversi dalam satuan radian).
+- selisih_lat = Selisih lintang tujuan dan asal (dalam radian).
+- selisih_lng = Selisih bujur tujuan dan asal (dalam radian).
+
+=========================================
+4. PENGHITUNGAN DAN PENGELOLAAN WAKTU PERJALANAN (DURASI)
+=========================================
+Untuk mengukur durasi waktu pengangkutan secara akurat dan menghindari kesalahan perhitungan waktu, sistem menggunakan mekanisme pencatatan waktu berikut:
+
+a. Aliran Waktu Rute
+1. Mulai Perjalanan (waktu_mulai): Disimpan saat sopir menekan tombol "Mulai Rute" di dashboard-nya.
+2. Kunjungan TPS (waktu_tiba & waktu_selesai): Dicatat secara individual pada setiap TPS yang dikunjungi untuk mengetahui durasi bongkar-muat sampah di lokasi tersebut.
+3. Selesai Perjalanan (waktu_selesai): Disimpan saat sopir tiba di TPA dan menyelesaikan seluruh tugas hariannya.
+
+b. Perhitungan Durasi Perjalanan Positif
+Selisih waktu dihitung menggunakan library Carbon di Laravel. Untuk menghindari nilai negatif akibat perbedaan waktu server atau kesalahan pembanding waktu, sistem menghitung durasi menggunakan nilai absolut (abs) detik dan dikonversi ke tipe data integer:
+
+Durasi Perjalanan (Detik) = Nilai Absolut( Waktu Selesai Rute - Waktu Mulai Rute )
+
+Di tingkat aplikasi (tampilan halaman riwayat), total detik yang disimpan di database tersebut dikonversi kembali ke format Jam dan Menit secara aman menggunakan pembagian dasar:
+- Jam = Pembulatan Ke Bawah( Durasi / 3600 )
+- Menit = Pembulatan Ke Bawah( (Durasi Sisa Modulo 3600) / 60 )
+
+=========================================
+5. URUTAN LANGKAH ALGORITMA ACO PADA SISTEM
+=========================================
+Berikut adalah urutan langkah (algoritma sekuensial) jalannya perhitungan rute di dalam aplikasi:
+
+Langkah 1: Inisialisasi
+Input koordinat kantor, TPA, dan daftar TPS. Bangun matriks jarak (Distance Matrix) antar lokasi menggunakan penentuan jarak (Metode A atau Metode B).
+
+Langkah 2: Setup Pheromone Awal
+Atur seluruh nilai pheromone awal pada setiap lintasan penghubung lokasi dengan nilai standar 1.0.
+
+Langkah 3: Perulangan Iterasi (Iterasi 1 sampai 50)
+Untuk setiap semut (Semut 1 sampai 20):
+a. Tempatkan semut pada titik awal (Kantor).
+b. Selama masih ada TPS yang belum dikunjungi oleh semut:
+   - Hitung probabilitas pemilihan TPS berikutnya menggunakan formula probabilitas yang membagi hasil kali Pheromone^Alpha dan Visibilitas^Beta dengan jumlah total nilai seluruh TPS yang belum dikunjungi.
+   - Gunakan metode Roulette Wheel Selection untuk menentukan TPS mana yang akan dikunjungi semut berikutnya berdasarkan nilai probabilitas tertinggi.
+c. Setelah semua TPS dikunjungi, arahkan semut langsung ke TPA (Titik Selesai).
+d. Hitung total jarak jalur yang dibentuk oleh semut tersebut.
+e. Jika total jarak semut ini lebih pendek dari rute terbaik sebelumnya, simpan rute semut ini sebagai Rute Terbaik Sementara.
+
+Langkah 4: Evaporasi & Deposit Pheromone
+a. Kurangi nilai pheromone di seluruh lintasan penghubung sebesar laju evaporasi (Pheromone * 0.5) untuk menyimulasikan penguapan pheromone.
+b. Tambahkan pheromone baru pada lintasan yang dilewati semut dengan nilai (100 / Total Jarak Semut).
+
+Langkah 5: Output Rute Teroptimasi
+Mengembalikan urutan TPS terbaik, total jarak optimal, dan detail jarak antar lokasi ke sistem untuk disimpan dan ditampilkan pada peta Leaflet.
