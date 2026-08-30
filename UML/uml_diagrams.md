@@ -25,7 +25,7 @@ flowchart LR
             UC_Jadwal((Kelola Jadwal & Import/Export))
             UC_Website((Kelola Koordinat Kantor & TPA))
             UC_DashboardAdmin((Pantau Dashboard & Grafik Statistik))
-            UC_MonitorRealtime((Pantau Live Rute & Timeline Sopir))
+            UC_MonitorRealtime((Pantau Riwayat Rute & Timeline Sopir))
         end
 
         subgraph Sopir_Features ["Fitur Jalan Sopir"]
@@ -203,69 +203,178 @@ classDiagram
 
 ---
 
-## 3. Activity Diagram (Eksekusi Rute & Dinamika ACO)
+## 3. Activity Diagram
+
+### 3.1. Activity Diagram Sopir (Eksekusi Rute & Dinamika ACO)
 
 Diagram alur ini menggambarkan proses sopir memulai pekerjaan, bagaimana ACO mengoptimasi rute awal, serta alur percabangan ketika sopir melakukan _skip_ rute atau reorder prioritas rute secara manual.
 
 ```mermaid
-flowchart TD
-    Start([Mulai]) --> Login[Sopir Login ke Aplikasi]
-    Login --> Dashboard[Buka Dashboard Sopir]
-    Dashboard --> CheckRoute{Apakah Rute Harian<br>Hari Ini Sudah Ada?}
+stateDiagram-v2
+    classDef actor fill:#f9f9f9,stroke:#333,stroke-width:1px;
 
-    %% Cabang Rute Belum Ada
-    CheckRoute -- Belum Ada --> GetJadwal[Ambil Jadwal TPS & Angkutan Hari Ini]
-    GetJadwal --> RunACO[Jalankan ACO untuk Mengurutkan TPS Secara Optimal]
-    RunACO --> CreateRoute[Buat Rute Harian & Rute Tujuan di Database]
-    CreateRoute --> LoadMap[Tampilkan Jalur Rute Teroptimasi di Peta Leaflet]
+    state "Sopir" as Sopir {
+        [*] --> Login
+        Login: 1. Login ke Aplikasi
+        Dashboard: 2. Buka Dashboard Sopir
 
-    %% Cabang Rute Sudah Ada
-    CheckRoute -- Sudah Ada --> LoadMap
+        ActionMulai: 3. Klik 'Mulai Rute'
+        Drive: 4. Mengemudi ke Lokasi TPS Aktif
 
-    LoadMap --> ActionMulai[Klik 'Mulai Rute']
-    ActionMulai --> StatusBerlangsung[Status Rute: 'Berlangsung' & TPS Pertama: 'Aktif']
+        %% Tindakan A
+        ActionTiba: 5a. Klik 'Tiba di Lokasi'
+        ActionSelesai: 6a. Klik 'Selesai'
 
-    StatusBerlangsung --> Drive[Sopir Mengemudi ke Lokasi Aktif]
-    Drive --> ChooseAction{Sopir Mengambil Tindakan}
+        %% Tindakan B
+        ActionSkip: 5b. Klik 'Lewati'
+        InputAlasan: 6b. Input Alasan & Pilih Jenis Skip
 
-    %% Tindakan A: Tiba & Selesai
-    ChooseAction -- Tiba & Selesai --> ActionTiba[Klik 'Tiba di Lokasi']
-    ActionTiba --> LogTiba[Sistem Catat Waktu Tiba & Log Tiba]
-    LogTiba --> ActionSelesai[Klik 'Selesai']
-    ActionSelesai --> StatusSelesai[Status TPS Update menjadi 'Selesai']
-    StatusSelesai --> ActivateNext[Aktifkan TPS Urutan Berikutnya]
-    ActivateNext --> CheckNext{Apakah Masih Ada<br>TPS Berikutnya?}
+        %% Tindakan C
+        ManualSelect: 5c. Pilih TPS Lain Secara Manual
 
-    %% Tindakan B: Skip TPS
-    ChooseAction -- Lompati (Skip) --> ActionSkip[Klik 'Lewati']
-    ActionSkip --> InputAlasan[Input Alasan Lewati & Pilih Jenis Skip]
-    InputAlasan --> CheckSkipType{Pilihan Jenis Skip?}
+        TargetTPA: 7. Bergerak Menuju TPA
+        TibaTPA: 8. Tiba di TPA & Selesai Bongkar Sampah
+        SelesaiRute: 9. Klik 'Selesai Rute'
+    }
 
-    CheckSkipType -- Dilewati (Kunjungi Nanti) --> SkipLater[Status: 'Dilewati' & Duplikat TPS ke Urutan 999]
-    SkipLater --> ReoptimizeACO[Jalankan ACO Re-optimasi Sisa TPS]
+    state "Sistem" as Sistem {
+        CheckRoute: Cek Rute Harian
+        GetJadwal: Ambil Jadwal TPS & Angkutan
+        RunACO: Jalankan ACO untuk Optimasi Rute
+        CreateRoute: Buat Rute Harian & Rute Tujuan di DB
+        LoadMap: Tampilkan Jalur Rute Teroptimasi di Peta Leaflet
+
+        StatusBerlangsung: Update Status Rute 'Berlangsung' & TPS Pertama 'Aktif'
+
+        LogTiba: Catat Waktu Tiba & Log Tiba
+        StatusSelesai: Update Status TPS 'Selesai'
+
+        CheckNext: Masih Ada TPS Berikutnya?
+        CheckSkipType: Cek Pilihan Jenis Skip
+        SkipLater: Update Status 'Dilewati' & Duplikat TPS ke Urutan 999
+        ReoptimizeACO: Jalankan ACO Re-optimasi Sisa TPS
+        SkipPerm: Update Status 'Tidak Dikunjungi'
+
+        ReorderACO: Jalankan ACO (Posisikan TPS Terpilih Pertama)
+
+        ActivateNext: Aktifkan TPS Urutan Berikutnya
+        EndRoute: Rute Selesai, Hitung Total Jarak & Durasi
+    }
+
+    %% Alur Transaksi
+    Login --> Dashboard
+    Dashboard --> CheckRoute
+
+    state CheckRouteChoice <<choice>>
+    CheckRoute --> CheckRouteChoice
+    CheckRouteChoice --> GetJadwal: Belum Ada
+    GetJadwal --> RunACO
+    RunACO --> CreateRoute
+    CreateRoute --> LoadMap
+
+    CheckRouteChoice --> LoadMap: Sudah Ada
+
+    LoadMap --> ActionMulai
+    ActionMulai --> StatusBerlangsung
+    StatusBerlangsung --> Drive
+
+    %% Cabang Pilihan Action
+    state ChooseAction <<choice>>
+    Drive --> ChooseAction
+
+    %% Alur A: Tiba & Selesai
+    ChooseAction --> ActionTiba: Tiba & Selesai
+    ActionTiba --> LogTiba
+    LogTiba --> ActionSelesai
+    ActionSelesai --> StatusSelesai
+    StatusSelesai --> ActivateNext
+
+    %% Alur B: Skip
+    ChooseAction --> ActionSkip: Lompati (Skip)
+    ActionSkip --> InputAlasan
+    InputAlasan --> CheckSkipType
+
+    state SkipChoice <<choice>>
+    CheckSkipType --> SkipChoice
+
+    SkipChoice --> SkipLater: Dilewati (Kunjungi Nanti)
+    SkipLater --> ReoptimizeACO
     ReoptimizeACO --> ActivateNext
 
-    CheckSkipType -- Tidak Dikunjungi (Selesai) --> SkipPerm[Status: 'Tidak Dikunjungi']
+    SkipChoice --> SkipPerm: Tidak Dikunjungi (Selesai)
     SkipPerm --> ActivateNext
 
-    %% Tindakan C: Prioritas Manual
-    ChooseAction -- Prioritas Manual --> ManualSelect[Pilih TPS Lain Secara Manual]
-    ManualSelect --> ReorderACO[Jalankan ACO: Posisikan TPS Terpilih ke Urutan Pertama Setelah Selesai]
+    %% Alur C: Prioritas Manual
+    ChooseAction --> ManualSelect: Prioritas Manual
+    ManualSelect --> ReorderACO
     ReorderACO --> StatusBerlangsung
 
-    %% Check Next Loop
-    CheckNext -- Ya --> Drive
-    CheckNext -- Tidak --> TargetTPA[Sopir Bergerak Menuju TPA]
+    %% Loop/Kondisi Next TPS
+    ActivateNext --> CheckNext
 
-    TargetTPA --> TibaTPA[Sopir Tiba di TPA & Selesai Bongkar Sampah]
-    TibaTPA --> SelesaiRute[Sopir Klik 'Selesai Rute']
-    SelesaiRute --> EndRoute[Rute Harian Selesai, Hitung Total Jarak & Durasi Positif]
-    EndRoute --> Selesai([Selesai])
+    state NextChoice <<choice>>
+    CheckNext --> NextChoice
+    NextChoice --> Drive: Ya
+    NextChoice --> TargetTPA: Tidak
+
+    TargetTPA --> TibaTPA
+    TibaTPA --> SelesaiRute
+    SelesaiRute --> EndRoute
+    EndRoute --> [*]
+```
+
+### 3.2. Activity Diagram Admin (Manajemen & Monitoring Riwayat Rute)
+
+Diagram alur ini menggambarkan proses Admin masuk ke sistem untuk melakukan pengelolaan data master (TPS, Angkutan, Sopir), memodifikasi koordinat Kantor & TPA di pengaturan website dengan peta interaktif Leaflet, mengelola jadwal pengangkutan (termasuk download template, import, dan export excel), serta melakukan pemantauan riwayat rute dan timeline aktivitas sopir yang tersimpan.
+
+```mermaid
+stateDiagram-v2
+    state "Aktor: Admin" as AdminState {
+        [*] --> LoginAdmin : Mulai
+        LoginAdmin: Mengisi Kredensial Login
+        DashboardAdmin: Mengakses Halaman Dashboard Utama
+
+        state "Pilihan Aktivitas Kelola" as ChoiceState {
+            MasterData: Kelola Data Master (TPS, Sopir, Angkutan)
+            WebConfig: Kelola Koordinat Kantor & TPA
+            JadwalConfig: Kelola Jadwal (Form & Impor Excel)
+            RouteMonitor: Lihat Riwayat Rute & Timeline
+        }
+    }
+
+    state "Sistem & Database" as SistemState {
+        ValidateUser: Validasi Kredensial Login
+        GetStats: Hitung Statistik Grafik & Jumlah Data
+        SaveMasterDB: Simpan Perubahan Data Master ke DB
+        SaveWebsiteDB: Simpan Koordinat Baru ke DB
+        ProcessExcel: Jalankan JadwalExcelService ke DB
+        FetchRouteLogs: Ambil Data Rute & Log Riwayat
+    }
+
+    %% Alur Interaksi & Transaksi
+    LoginAdmin --> ValidateUser : Kirim Username & Password
+    ValidateUser --> DashboardAdmin : Login Valid & Sukses
+    DashboardAdmin --> GetStats : Muat Data Halaman Utama
+    GetStats --> ChoiceState : Menu Siap Diakses
+
+    MasterData --> SaveMasterDB : Submit Form CRUD
+    SaveMasterDB --> DashboardAdmin : Kembali ke Dashboard
+
+    WebConfig --> SaveWebsiteDB : Simpan Peta Leaflet
+    SaveWebsiteDB --> DashboardAdmin : Kembali ke Dashboard
+
+    JadwalConfig --> ProcessExcel : Upload Excel / Update Form
+    ProcessExcel --> DashboardAdmin : Kembali ke Dashboard
+
+    RouteMonitor --> FetchRouteLogs : Filter Riwayat Rute
+    FetchRouteLogs --> DashboardAdmin : Tampilkan Peta & Timeline
 ```
 
 ---
 
-## 4. Sequence Diagram (Generasi & Optimasi Rute ACO)
+## 4. Sequence Diagram
+
+### 4.1. Sequence Diagram Sopir (Generasi & Optimasi Rute ACO)
 
 Diagram interaksi ini berfokus pada alur pemanggilan data dan penghitungan jalur terpendek ketika sopir membuka halaman dashboard pertama kali.
 
@@ -314,6 +423,66 @@ sequenceDiagram
     deactivate DC
 ```
 
+### 4.2. Sequence Diagram Admin (Manajemen Jadwal & Import Excel)
+
+Diagram interaksi ini berfokus pada proses Admin mengelola jadwal mingguan, mengunduh file template, serta memproses import excel yang menerapkan validasi baris demi baris menggunakan `JadwalExcelService`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin
+    participant JC as JadwalController (Admin)
+    participant JES as JadwalExcelService
+    participant DB as Database
+
+    Admin->>JC: Buka Halaman Index Jadwal
+    activate JC
+    JC->>DB: Query Jadwal & Hari List
+    DB->>JC: Return Data Jadwal & Hari List
+    JC->>Admin: Tampilkan Halaman Index Jadwal
+    deactivate JC
+
+    %% Import Excel
+    Admin->>JC: Upload File Excel & Klik "Import Sekarang"
+    activate JC
+    JC->>JES: import(UploadedFile)
+    activate JES
+    JES->>DB: Query Map Users (Sopir), TPS, Angkutan
+    DB->>JES: Return UserMap, TpsMap, AngkutanMap
+
+    loop Per Baris Data Excel (Mulai Baris 2)
+        JES->>JES: Validasi data hari, nama sopir, nama angkutan, nama TPS
+        alt Data Tidak Valid (Misal TPS tidak ditemukan)
+            JES->>JES: Tambahkan pesan error ke array $errors
+        else Data Valid
+            JES->>DB: Jadwal::create([user_id, tps_id, angkutan_id, hari])
+        end
+    end
+
+    alt Jika terdapat data yang tidak valid ($errors tidak kosong)
+        JES-->>JC: Throw Exception dengan detail error per baris
+        JC-->>Admin: Redirect back dengan error list (Flash Message)
+    else Semua data valid & berhasil di-import
+        JES-->>JC: Return Jumlah Data Di-import
+        deactivate JES
+        JC-->>Admin: Redirect back dengan sukses (Flash Message)
+    end
+    deactivate JC
+
+    %% Download Template
+    Admin->>JC: Klik "Download Template"
+    activate JC
+    JC->>JES: downloadTemplate()
+    activate JES
+    JES->>DB: Ambil contoh data Sopir, TPS, Angkutan
+    DB->>JES: Return data
+    JES->>JES: Buat berkas Spreadsheet, set header kuning & bold, isi baris contoh
+    JES-->>JC: Return objek Spreadsheet
+    deactivate JES
+    JC-->>Admin: Stream download file excel template (.xlsx)
+    deactivate JC
+```
+
 ---
 
 ## 5. DFD (Data Flow Diagram)
@@ -335,7 +504,7 @@ flowchart TD
         Admin -->|1. Data Master TPS, Angkutan, Sopir| System
         Admin -->|2. Data Jadwal & Koordinat Website| System
         System -->|3. Dashboard Statistik & Grafik| Admin
-        System -->|4. Laporan Riwayat & Live Map Monitoring| Admin
+        System -->|4. Laporan Riwayat & Monitoring Rute| Admin
 
         %% Aliran Data Sopir
         Sopir -->|5. Data Login & Aksi Perjalanan Rute| System
@@ -403,7 +572,7 @@ flowchart TD
 
         %% Proses 5.0
         DS5 & DS6 -->|Baca Rute & Log Perjalanan| P5
-        P5 -->|Grafik Kinerja & Live Map Monitoring| Ent_Admin
+        P5 -->|Grafik Kinerja & Monitoring Rute| Ent_Admin
         P5 -->|Riwayat Rute Sendiri| Ent_Sopir
     end
 ```
