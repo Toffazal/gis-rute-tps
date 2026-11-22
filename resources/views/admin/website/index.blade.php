@@ -26,30 +26,35 @@
                     <!-- 1. Informasi Umum -->
                     <div class="border p-4 rounded mb-4 bg-light shadow-sm">
                         <h4 class="fw-bold mb-4 text-primary"><i class="fas fa-info-circle me-2"></i>Informasi Umum</h4>
-                        
+
                         <div class="row">
                             <div class="col-md-6 col-12">
                                 <div class="form-group mb-3">
                                     <label for="nama" class="form-label fw-bold">Nama Website / Aplikasi</label>
-                                    <input type="text" name="nama" id="nama" class="form-control" value="{{ old('nama', $website->nama) }}" required>
+                                    <input type="text" name="nama" id="nama" class="form-control"
+                                        value="{{ old('nama', $website->nama) }}" required>
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label for="telepon" class="form-label fw-bold">Nomor Telepon / Kontak</label>
-                                    <input type="text" name="telepon" id="telepon" class="form-control" value="{{ old('telepon', $website->telepon) }}" required>
+                                    <input type="text" name="telepon" id="telepon" class="form-control"
+                                        value="{{ old('telepon', $website->telepon) }}" required>
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label for="email" class="form-label fw-bold">Email Kantor</label>
-                                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $website->email) }}" required>
+                                    <input type="email" name="email" id="email" class="form-control"
+                                        value="{{ old('email', $website->email) }}" required>
                                 </div>
 
                                 <div class="form-group mb-3">
                                     <label for="logo" class="form-label fw-bold">Logo Website</label>
-                                    <input type="file" name="logo" id="logo" class="form-control mb-2" accept="image/*">
+                                    <input type="file" name="logo" id="logo" class="form-control mb-2"
+                                        accept="image/*">
                                     @if ($website->logo)
                                         <div class="mt-2 p-2 border rounded bg-white d-inline-block">
-                                            <img id="logo-preview" src="{{ asset('img/' . $website->logo) }}" alt="Logo Preview" style="max-height: 80px;" class="img-fluid">
+                                            <img id="logo-preview" src="{{ asset('img/' . $website->logo) }}"
+                                                alt="Logo Preview" style="max-height: 80px;" class="img-fluid">
                                             <small class="d-block text-muted text-center mt-1">Logo Saat Ini</small>
                                         </div>
                                     @endif
@@ -66,58 +71,87 @@
                                     <label for="alamat" class="form-label fw-bold">Alamat Kantor</label>
                                     <textarea name="alamat" id="alamat" class="form-control" rows="4" required>{{ old('alamat', $website->alamat) }}</textarea>
                                 </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="kopSurat" class="form-label fw-bold">Kop Surat Laporan (Gambar)</label>
+                                    <input type="file" name="kopSurat" id="kopSurat" class="form-control mb-2"
+                                        accept="image/*">
+                                    <small class="text-muted d-block">Upload gambar kop surat instansi (PNG/JPG/WEBP, maks 2MB). Gambar ini akan otomatis dicantumkan di bagian atas saat mencetak laporan riwayat rute format A4.</small>
+                                    @if ($website->kopSurat)
+                                        <div class="mt-2 p-2 border rounded bg-white d-inline-block w-100 text-center">
+                                            <img id="kopSurat-preview" src="{{ asset('img/' . $website->kopSurat) }}"
+                                                alt="Kop Surat Preview" style="max-height: 90px; max-width: 100%; object-fit: contain;" class="img-fluid">
+                                            <small class="d-block text-muted text-center mt-1">Kop Surat Saat Ini</small>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- 2. Lokasi TPA Map (1 Kolom / Full Width) -->
                     <div class="border p-4 rounded mb-4 bg-light shadow-sm">
-                        <h4 class="fw-bold mb-2 text-dark d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h4
+                            class="fw-bold mb-2 text-dark d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <span><i class="fas fa-trash-alt me-2 text-danger"></i>Lokasi TPA</span>
-                            <button type="button" class="btn btn-info btn-sm text-white" id="set-tpa-current"><i class="fas fa-location-crosshairs me-1"></i> Tentukan dari Lokasi Saya</button>
+                            <button type="button" class="btn btn-info btn-sm text-white" id="set-tpa-current"><i
+                                    class="fas fa-location-crosshairs me-1"></i> Tentukan dari Lokasi Saya</button>
                         </h4>
-                        <p class="text-muted mb-3" style="font-size: 0.85rem;">Klik pada peta untuk menaruh / memindahkan koordinat lokasi TPA.</p>
-                        
-                        <div id="map-tpa" style="height: 380px; border-radius: 4px; border: 1px solid #ddd;" class="mb-3"></div>
-                        
+                        <p class="text-muted mb-3" style="font-size: 0.85rem;">Klik pada peta untuk menaruh / memindahkan
+                            koordinat lokasi TPA.</p>
+
+                        <div id="map-tpa" style="height: 380px; border-radius: 4px; border: 1px solid #ddd;"
+                            class="mb-3"></div>
+
                         <div class="row">
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="tpa_lat" class="form-label fw-bold">Latitude TPA</label>
-                                <input type="number" id="tpa_lat" class="form-control" step="any" value="{{ $tpaLat }}">
+                                <input type="number" id="tpa_lat" class="form-control" step="any"
+                                    value="{{ $tpaLat }}">
                             </div>
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="tpa_lng" class="form-label fw-bold">Longitude TPA</label>
-                                <input type="number" id="tpa_lng" class="form-control" step="any" value="{{ $tpaLng }}">
+                                <input type="number" id="tpa_lng" class="form-control" step="any"
+                                    value="{{ $tpaLng }}">
                             </div>
                         </div>
-                        <input type="hidden" name="koordinat_tpa" id="koordinat_tpa" value="{{ $website->koordinat_tpa }}">
+                        <input type="hidden" name="koordinat_tpa" id="koordinat_tpa"
+                            value="{{ $website->koordinat_tpa }}">
                     </div>
 
                     <!-- 3. Lokasi Kantor DLH Map (1 Kolom / Full Width) -->
                     <div class="border p-4 rounded mb-4 bg-light shadow-sm">
-                        <h4 class="fw-bold mb-2 text-dark d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h4
+                            class="fw-bold mb-2 text-dark d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <span><i class="fas fa-building me-2 text-primary"></i>Lokasi Kantor DLH</span>
-                            <button type="button" class="btn btn-info btn-sm text-white" id="set-kantor-current"><i class="fas fa-location-crosshairs me-1"></i> Tentukan dari Lokasi Saya</button>
+                            <button type="button" class="btn btn-info btn-sm text-white" id="set-kantor-current"><i
+                                    class="fas fa-location-crosshairs me-1"></i> Tentukan dari Lokasi Saya</button>
                         </h4>
-                        <p class="text-muted mb-3" style="font-size: 0.85rem;">Klik pada peta untuk menaruh / memindahkan koordinat lokasi Kantor DLH.</p>
-                        
-                        <div id="map-kantor" style="height: 380px; border-radius: 4px; border: 1px solid #ddd;" class="mb-3"></div>
-                        
+                        <p class="text-muted mb-3" style="font-size: 0.85rem;">Klik pada peta untuk menaruh / memindahkan
+                            koordinat lokasi Kantor DLH.</p>
+
+                        <div id="map-kantor" style="height: 380px; border-radius: 4px; border: 1px solid #ddd;"
+                            class="mb-3"></div>
+
                         <div class="row">
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="kantor_lat" class="form-label fw-bold">Latitude Kantor</label>
-                                <input type="number" id="kantor_lat" class="form-control" step="any" value="{{ $kantorLat }}">
+                                <input type="number" id="kantor_lat" class="form-control" step="any"
+                                    value="{{ $kantorLat }}">
                             </div>
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="kantor_lng" class="form-label fw-bold">Longitude Kantor</label>
-                                <input type="number" id="kantor_lng" class="form-control" step="any" value="{{ $kantorLng }}">
+                                <input type="number" id="kantor_lng" class="form-control" step="any"
+                                    value="{{ $kantorLng }}">
                             </div>
                         </div>
-                        <input type="hidden" name="koordinat_kantor" id="koordinat_kantor" value="{{ $website->koordinat_kantor }}">
+                        <input type="hidden" name="koordinat_kantor" id="koordinat_kantor"
+                            value="{{ $website->koordinat_kantor }}">
                     </div>
 
                     <div class="border-top pt-3 mt-4 text-end">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan Perubahan</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan
+                            Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -164,12 +198,14 @@
             // 1. TPA Map
             const mapTpa = L.map('map-tpa').setView([initialTpaLat, initialTpaLng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapTpa);
-            let markerTpa = L.marker([initialTpaLat, initialTpaLng]).addTo(mapTpa).bindPopup("Lokasi TPA").openPopup();
+            let markerTpa = L.marker([initialTpaLat, initialTpaLng]).addTo(mapTpa).bindPopup("Lokasi TPA")
+                .openPopup();
 
             // 2. Kantor DLH Map
             const mapKantor = L.map('map-kantor').setView([initialKantorLat, initialKantorLng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapKantor);
-            let markerKantor = L.marker([initialKantorLat, initialKantorLng]).addTo(mapKantor).bindPopup("Lokasi Kantor DLH").openPopup();
+            let markerKantor = L.marker([initialKantorLat, initialKantorLng]).addTo(mapKantor).bindPopup(
+                "Lokasi Kantor DLH").openPopup();
 
             // Update Functions
             function updateTpaData(lat, lng) {
@@ -209,7 +245,8 @@
             document.getElementById('set-tpa-current').addEventListener('click', function() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
-                        updateTpaData(position.coords.latitude.toFixed(7), position.coords.longitude.toFixed(7));
+                        updateTpaData(position.coords.latitude.toFixed(7), position.coords.longitude
+                            .toFixed(7));
                     }, function() {
                         alert("Gagal mengambil koordinat lokasi saat ini.");
                     });
@@ -221,7 +258,8 @@
             document.getElementById('set-kantor-current').addEventListener('click', function() {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(function(position) {
-                        updateKantorData(position.coords.latitude.toFixed(7), position.coords.longitude.toFixed(7));
+                        updateKantorData(position.coords.latitude.toFixed(7), position.coords
+                            .longitude.toFixed(7));
                     }, function() {
                         alert("Gagal mengambil koordinat lokasi saat ini.");
                     });
@@ -232,6 +270,7 @@
 
             // Form Manual Input Updates with Debounce
             let debounceTpa;
+
             function handleManualTpaInput() {
                 clearTimeout(debounceTpa);
                 debounceTpa = setTimeout(function() {
@@ -246,6 +285,7 @@
             tpaLngInput.addEventListener('input', handleManualTpaInput);
 
             let debounceKantor;
+
             function handleManualKantorInput() {
                 clearTimeout(debounceKantor);
                 debounceKantor = setTimeout(function() {

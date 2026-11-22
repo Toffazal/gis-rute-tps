@@ -37,6 +37,7 @@ class WebsiteController extends Controller
             'telepon' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
+            'kopSurat' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
             'koordinat_tpa' => ['required', 'string'],
             'koordinat_kantor' => ['required', 'string'],
         ]);
@@ -62,6 +63,19 @@ class WebsiteController extends Controller
             }
 
             $data['logo'] = $filename;
+        }
+
+        if ($request->hasFile('kopSurat')) {
+            $file = $request->file('kopSurat');
+            $filename = 'kop_' . time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('img'), $filename);
+
+            // Hapus kop surat lama jika ada
+            if ($website->kopSurat && file_exists(public_path('img/' . $website->kopSurat))) {
+                @unlink(public_path('img/' . $website->kopSurat));
+            }
+
+            $data['kopSurat'] = $filename;
         }
 
         $website->update($data);

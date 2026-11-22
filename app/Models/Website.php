@@ -15,6 +15,7 @@ class Website extends Model
         'telepon',
         'email',
         'logo',
+        'kopSurat',
         'koordinat_tpa', //[latitude, longitude]
         'koordinat_kantor', //[latitude, longitude]
     ];

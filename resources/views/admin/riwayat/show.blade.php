@@ -90,15 +90,21 @@
         }
     </style>
 
-    <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <a href="{{ route('admin.riwayat.index') }}" class="btn btn-secondary btn-sm text-white">
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Riwayat
         </a>
-        @if ($ruteHarian->status === 'berlangsung')
-            <span class="badge bg-danger animate-pulse px-3 py-2 text-white">
-                <i class="fas fa-satellite-dish fa-spin me-2"></i> PANTUAN REALTIME / SEDANG BERJALAN
-            </span>
-        @endif
+        <div class="d-flex align-items-center gap-2">
+            @if ($ruteHarian->status === 'berlangsung')
+                <span class="badge bg-danger animate-pulse px-3 py-2 text-white">
+                    <i class="fas fa-satellite-dish fa-spin me-2"></i> PANTUAN REALTIME / SEDANG BERJALAN
+                </span>
+            @endif
+            <a href="{{ route('admin.riwayat.cetak-show', $ruteHarian->id) }}" target="_blank"
+                class="btn btn-danger btn-sm text-white">
+                <i class="fas fa-print me-1"></i> Cetak Detail
+            </a>
+        </div>
     </div>
 
     <!-- Info Header Card -->

@@ -22,5 +22,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Monitoring Rute Sopir
     Route::get('/admin/riwayat', [RiwayatController::class, 'index'])->name('admin.riwayat.index');
+    Route::get('/admin/riwayat/cetak', [RiwayatController::class, 'cetak'])->name('admin.riwayat.cetak');
+    Route::get('/admin/riwayat/{ruteHarian}/cetak', [RiwayatController::class, 'cetakShow'])->name('admin.riwayat.cetak-show');
     Route::get('/admin/riwayat/{ruteHarian}', [RiwayatController::class, 'show'])->name('admin.riwayat.show');
 });
